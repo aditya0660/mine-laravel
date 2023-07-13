@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+  nginx:  # Add the Nginx service
+    image: nginx:latest
+    container_name: laravel-nginx
+    restart: unless-stopped
+    ports:
+      - 9000:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Mount your custom Nginx configuration file
+    depends_on:
+      - app
+      - db
+    networks:
+      - laravel-net
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel-app
+    container_name: laravel-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_KEY=
+      - DB_CONNECTION=mysql
+      - DB_HOST=db  # Update the DB_HOST to the service name of the MySQL container
+      - DB_PORT=3306
+      - DB_DATABASE=travellist
+      - DB_USERNAME=travellist_user
+      - DB_PASSWORD=password
+    depends_on:
+      - db
+    networks:
+      - laravel-net
+
+  db:
+    image: mysql:8.0
+    container_name: laravel-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=travellist
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_USER=travellist_user
+      - MYSQL_PASSWORD=password
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - laravel-net
+
+
+
+networks:
+  laravel-net:
+
+volumes:
+  dbdata:
